@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ceklis Kelengkapan Peralatan & Acara</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              kitabisa: {
+                DEFAULT: "#00AEEF",
+                dark: "#0095CD",
+                light: "#E6F7FF",
+                accent: "#007BB5",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    >
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    >
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Alpine.js Persist Plugin -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js Core -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+
+    <!-- App Wrapper (Responsive Desktop Container ala Kitabisa Web) -->
+    <div
+      x-data="checklistApp()"
+      x-init="initApp()"
+      class="w-full min-h-screen flex flex-col relative"
+    >
+
+      <!-- Header Kitabisa Style (Desktop & Mobile Responsive) -->
+      <header class="bg-kitabisa text-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white backdrop-blur-md shadow-inner"
+            >
+              <i class="fa-solid fa-hand-holding-heart text-xl"></i>
+            </div>
+            <div>
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-none">Ceklis Kelengkapan</h1>
+              <p class="text-white/80 text-xs font-medium mt-0.5">Peralatan & Perlengkapan Acara</p>
+            </div>
+          </div>
+                
+          <div class="flex items-center gap-2">
+            <span
+              class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-shield-check text-xs"></i> Verified
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5 pb-32">
+
+        <!-- Card Progres Utama (Kitabisa Campaign Card Style) -->
+        <section
+          class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 space-y-4"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span
+                class="inline-block text-[11px] font-bold uppercase tracking-wider text-kitabisa bg-kitabisa-light px-2.5 py-1 rounded-md mb-1.5"
+              >
+                Status Kelengkapan
+              </span>
+              <h2 class="text-sm sm:text-base font-bold text-slate-700">Target Barang Terkumpul</h2>
+            </div>
+            <div class="self-start sm:self-auto">
+              <span
+                class="text-sm font-extrabold text-kitabisa bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-100"
+                x-text="`${progressPercent}% Selesai`"
+              ></span>
+            </div>
+          </div>
+
+          <div class="flex items-baseline gap-2">
+            <span
+              class="text-3xl sm:text-4xl font-extrabold text-slate-800"
+              x-text="completedCount"
+            ></span>
+            <span
+              class="text-sm font-semibold text-slate-400"
+              x-text="`/ ${totalCount} barang siap`"
+            ></span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div
+            class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-100"
+          >
+            <div
+              class="bg-kitabisa h-full rounded-full transition-all duration-500 ease-out shadow-sm"
+              :style="`width: ${progressPercent}%`"
+            ></div>
+          </div>
+        </section>
+
+        <!-- Search & Filter Tab -->
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <!-- Search Box -->
+          <div class="relative flex-1">
+            <i
+              class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+            ></i>
+            <input
+              type="text"
+              x-model="searchQuery"
+              placeholder="Cari nama peralatan atau perlengkapan..."
+              class="w-full pl-10 pr-9 py-2.5 bg-white rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-kitabisa focus:border-transparent transition shadow-sm"
+            >
+            <button
+              x-show="searchQuery.length > 0"
+              @click="searchQuery = ''"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm"
+            >
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div
+            class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl text-xs sm:text-sm font-medium sm:w-80 flex-shrink-0"
+          >
+            <button
+              @click="filterStatus = 'all'"
+              :class="filterStatus === 'all' ? 'bg-white text-kitabisa font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+              class="py-2 rounded-lg text-center transition"
+            >
+              Semua
+            </button>
+            <button
+              @click="filterStatus = 'pending'"
+              :class="filterStatus === 'pending' ? 'bg-white text-kitabisa font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+              class="py-2 rounded-lg text-center transition flex items-center justify-center gap-1.5"
+            >
+              Belum <span
+                class="bg-slate-200/80 text-slate-700 rounded-full px-2 py-0.5 text-[11px] font-bold"
+                x-text="pendingCount"
+              ></span>
+            </button>
+            <button
+              @click="filterStatus = 'completed'"
+              :class="filterStatus === 'completed' ? 'bg-white text-kitabisa font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+              class="py-2 rounded-lg text-center transition flex items-center justify-center gap-1.5"
+            >
+              Selesai <span
+                class="bg-kitabisa-light text-kitabisa rounded-full px-2 py-0.5 text-[11px] font-bold"
+                x-text="completedCount"
+              ></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- List Kategori -->
+        <div class="space-y-4">
+          <template x-for="(catConfig, catKey) in categories" :key="catKey">
+            <section
+              x-show="getFilteredItemsByCategory(catKey).length > 0 || (searchQuery === '' && filterStatus === 'all')"
+              class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden transition"
+            >
+              <!-- Header Kategori -->
+              <div
+                class="bg-slate-50/80 px-5 py-3.5 border-b border-slate-100 flex justify-between items-center"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-kitabisa bg-kitabisa-light text-sm font-bold shadow-xs"
+                  >
+                    <i :class="`fa-solid ${catConfig.icon}`"></i>
+                  </div>
+                  <div>
+                    <h3
+                      class="font-bold text-slate-800 text-xs sm:text-sm"
+                      x-text="catConfig.title"
+                    ></h3>
+                    <p
+                      class="text-[11px] text-slate-400 font-medium mt-0.5"
+                      x-text="getCategoryProgressText(catKey)"
+                    ></p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Items List -->
+              <ul class="divide-y divide-slate-100">
+                <template x-for="item in getFilteredItemsByCategory(catKey)" :key="item.id">
+                  <li
+                    class="px-5 py-3.5 hover:bg-slate-50/70 transition flex items-center justify-between group"
+                  >
+                    <label
+                      :for="`item-${item.id}`"
+                      class="flex items-center gap-3.5 cursor-pointer flex-1 min-w-0 pr-3"
+                    >
+                      <input
+                        type="checkbox"
+                        :id="`item-${item.id}`"
+                        :checked="item.checked"
+                        @change="toggleItem(item.id)"
+                        class="hidden"
+                      >
+                      <div
+                        class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0"
+                        :class="item.checked ? 'bg-kitabisa border-kitabisa' : 'border-slate-300 group-hover:border-slate-400'"
+                      >
+                        <i x-show="item.checked" class="fa-solid fa-check text-white text-[11px]"></i>
+                      </div>
+                                        
+                      <div class="flex items-center gap-2 truncate flex-1">
+                        <span
+                          class="text-xs sm:text-sm transition-all truncate"
+                          :class="item.checked ? 'line-through text-slate-400 font-normal' : 'text-slate-700 font-semibold'"
+                          x-text="item.name"
+                        ></span>
+                        <template x-if="item.qty">
+                          <span
+                            class="inline-block text-[11px] font-bold text-kitabisa bg-kitabisa-light px-2 py-0.5 rounded-md flex-shrink-0"
+                            x-text="item.qty"
+                          ></span>
+                        </template>
+                      </div>
+                    </label>
+                                    
+                    <button
+                      @click="deleteItem(item.id)"
+                      class="text-slate-300 hover:text-rose-500 p-1.5 rounded-lg transition opacity-100 sm:opacity-0 group-hover:opacity-100"
+                      title="Hapus Barang"
+                    >
+                      <i class="fa-regular fa-trash-can text-sm"></i>
+                    </button>
+                  </li>
+                </template>
+
+                <li
+                  x-show="getFilteredItemsByCategory(catKey).length === 0"
+                  class="p-6 text-center text-slate-400 text-xs sm:text-sm"
+                >
+                  Tidak ada barang dalam kategori ini.
+                </li>
+              </ul>
+            </section>
+          </template>
+        </div>
+
+      </main>
+
+      <!-- Sticky / Fixed Bottom Action Bar (Lebar Mengikuti Layout Desktop Kitabisa) -->
+      <div
+        class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-30"
+      >
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
+          <button
+            @click="resetAll()"
+            class="w-1/3 sm:w-44 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-rotate-left text-sm"></i> 
+            <span>Reset Ceklis</span>
+          </button>
+          <button
+            @click="isModalOpen = true"
+            class="flex-1 py-3 bg-kitabisa hover:bg-kitabisa-dark text-white rounded-xl font-bold text-xs sm:text-sm shadow-md shadow-sky-500/20 transition flex items-center justify-center gap-2"
+          >
+            <i class="fa-solid fa-plus text-sm"></i> 
+            <span>Tambah Barang Baru</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Tambah Barang -->
+      <div
+        x-show="isModalOpen"
+        x-transition.opacity
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+        style="display: none;"
+      >
+        <div
+          @click.away="closeModal()"
+          class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl transform transition-all space-y-4"
+        >
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-800">Tambah Barang Baru</h3>
+            <button @click="closeModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+                
+          <form @submit.prevent="addItem()" class="space-y-4">
+            <div>
+              <label
+                class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1"
+              >Kategori</label>
+              <select
+                x-model="newItem.category"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-kitabisa"
+              >
+                <option value="dibawa">PERALATAN YANG PERLU DIBAWA</option>
+                <option value="dibeli">PERALATAN YANG PERLU DIBELI</option>
+                <option value="acara">PERLENGKAPAN ACARA</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1"
+              >Nama Barang</label>
+              <input
+                type="text"
+                x-model="newItem.name"
+                required
+                placeholder="Contoh: Sendok makan"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-kitabisa"
+              >
+            </div>
+            <div>
+              <label
+                class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1"
+              >Jumlah / Catatan (Opsional)</label>
+              <input
+                type="text"
+                x-model="newItem.qty"
+                placeholder="Contoh: 2 set / 5 pcs"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-kitabisa"
+              >
+            </div>
+                    
+            <div class="flex justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                @click="closeModal()"
+                class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-bold rounded-xl transition"
+              >Batal</button>
+              <button
+                type="submit"
+                class="px-5 py-2.5 bg-kitabisa hover:bg-kitabisa-dark text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-md"
+              >Simpan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div
+        x-show="toast.show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-4"
+        class="fixed bottom-20 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 z-40 text-xs sm:text-sm"
+        style="display: none;"
+      >
+        <i class="fa-solid fa-circle-check text-kitabisa text-lg"></i>
+        <span x-text="toast.message" class="flex-1 font-medium"></span>
+      </div>
+
+    </div>
+
+    <!-- Alpine.js Application Logic -->
+    <script src="./checklist.js"></script>
+  </body>
+</html>
